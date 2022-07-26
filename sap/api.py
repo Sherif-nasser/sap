@@ -271,12 +271,16 @@ def send_payroll(name):
         'Content-Type': 'application/json',
         'Cookie': f'B1SESSION={session_id}'
     }
-
-    return {'success': True}
+    response = requests.request("POST", url, headers=headers, data=payload)
+    if response.status_code != 201 and response.status_code != 204:
+        resp = json.loads(response.text)
+        return {"success": False, "message": f"SAP: {resp['error']['message']['value']}"}
+    else:
+        return {'success': True}
 
 
 @frappe.whitelist()
-def send_loan(name):
+def send_loan(name):  # done
     post_product_setting = frappe.get_doc("Post Product Setting").as_dict()
     login_url = post_product_setting["login_url"]
     password = post_product_setting["password"]
@@ -305,11 +309,17 @@ def send_loan(name):
             }
         }
     }
-    print(data)
+    # print(data)
     payload = json.dumps(data)
     headers = {
         'Content-Type': 'application/json',
         'Cookie': f'B1SESSION={session_id}'
     }
-    # response = requests.request("POST", url, headers=headers, data=payload)
-    return {'success': "True"}
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    if response.status_code != 201 and response.status_code != 204:
+        # print("got here")
+        resp = json.loads(response.text)
+        return {"success": False, "message": f"SAP: {resp['error']['message']['value']}"}
+    else:
+        return {'success': True}
