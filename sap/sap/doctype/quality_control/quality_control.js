@@ -12,7 +12,6 @@ frappe.provide("erpnext.controllers");
 frappe.ui.form.on('Quality Inspection', {
 	onload_post_render: function (frm) {
 		if (frm.is_new() && frappe.get_prev_route()[1] == "Quality Control") {
-			console.log(frappe._from_link.doc)
 			try {
 				frm.set_value("item_code", frappe._from_link.doc.item_serial);
 				frm.set_value("reference_type", "Product Order");
@@ -38,7 +37,6 @@ frappe.ui.form.on('Quality Control', {
 			method: 'sap.api.get_items_wait_quality',
 			callback: function (r) {
 				let items = r.message;
-				console.log("the items", items)
 				update_items_table(frm, items);
 			}
 		});
