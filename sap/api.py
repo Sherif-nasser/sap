@@ -20,7 +20,7 @@ def get_items_wait_quality(pallet_no='', start_date='', end_date='', item_serial
     """
 
     query = """
-        SELECT pd.name, pd.pallet_no, pd.gross_weight, pd.net_weight, pd.quality_status, pd.item_status, p.document_no, p.item_group, p.customer_no, p.customer_name, p.quantity, p.length, p.width, p.item_serial, p.weight, p.thickness, p.core_type, p.core_weight, p.total_weight, p.application
+        SELECT pd.name, p.name AS product_name, pd.pallet_no, pd.gross_weight, pd.net_weight, pd.quality_status, pd.item_status, p.document_no, p.item_group, p.customer_no, p.customer_name, p.quantity, p.length, p.width, p.item_serial, p.weight, p.thickness, p.core_type, p.core_weight, p.total_weight, p.application
         FROM `tabProduct Order` AS p JOIN `tabProduct Order Details` AS pd
         ON (p.name = pd.parent)
         WHERE (pd.item_status='Waiting Quality')
