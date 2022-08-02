@@ -18,6 +18,9 @@ frappe.ui.form.on('Quality Inspection', {
 				frm.set_value("reference_name", frappe._from_link.doc.product_name);
 			} catch (e) { }
 		}
+	},
+	before_save: function (frm) {
+		frappe.set_route('/app/quality-control');
 	}
 })
 
