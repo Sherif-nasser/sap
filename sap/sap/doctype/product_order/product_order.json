@@ -373,9 +373,9 @@
   },
   {
    "fieldname": "shift",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Shift",
-   "options": "\n1\n2\n3"
+   "options": "Shift Type"
   },
   {
    "fieldname": "weight_type",
@@ -415,7 +415,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-07-21 15:53:52.419715",
+ "modified": "2022-08-15 15:39:10.440741",
  "modified_by": "Administrator",
  "module": "Sap",
  "name": "Product Order",
