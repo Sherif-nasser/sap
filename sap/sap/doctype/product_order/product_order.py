@@ -26,6 +26,7 @@ class ProductOrder(Document):
 
     def before_submit(self):
         resp = send_product_to_sap(self.name)
+        self.order_status = "Finished"
         if not resp["success"]:
             frappe.throw(resp["message"])
         else:

@@ -11,6 +11,7 @@
   "item_no",
   "shift",
   "shift_employee",
+  "order_status",
   "column_break_3",
   "item_group",
   "item_serial",
@@ -93,7 +94,6 @@
   {
    "fieldname": "item_serial",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Item No",
    "read_only": 1
   },
@@ -410,12 +410,21 @@
    "fieldname": "print_format",
    "fieldtype": "Select",
    "label": "Print format"
+  },
+  {
+   "default": "New",
+   "fieldname": "order_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Order Status",
+   "options": "New\nIn Progress\nFinished",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-08-15 16:09:59.309269",
+ "modified": "2022-08-17 14:52:22.751434",
  "modified_by": "Administrator",
  "module": "Sap",
  "name": "Product Order",

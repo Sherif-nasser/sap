@@ -89,6 +89,7 @@ frappe.ui.form.on("Product Order", {
         ref: `${frm.doc.item_serial}-${frm.doc.length}-${frm.doc.width}`,
       });
     }
+    frm.set_value("order_status", "In Progress");
     refresh_field("product_details");
   },
   send_to_sap: function (frm) {
