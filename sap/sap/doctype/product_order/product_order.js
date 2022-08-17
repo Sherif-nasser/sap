@@ -1,29 +1,36 @@
 // Copyright (c) 2022, ahmed and contributors
 // For license information, please see license.txt
 frappe.require(["assets/sap/js/mqtt.min.js"]);
-frappe.provide("frappe.meta")
-// console.log(locals.DocType['Product Order'])
+frappe.provide("frappe.meta");
 
 $.extend(frappe.meta, {
   get_print_formats: function (doctype) {
     var print_format_list = ["Standard"];
     var default_print_format = locals.DocType[doctype].default_print_format;
-    let enable_raw_printing = frappe.model.get_doc(":Print Settings", "Print Settings").enable_raw_printing;
-    var print_formats = frappe.get_list("Print Format", { doc_type: doctype })
-      .sort(function (a, b) { return (a > b) ? 1 : -1; });
+    let enable_raw_printing = frappe.model.get_doc(
+      ":Print Settings",
+      "Print Settings"
+    ).enable_raw_printing;
+    var print_formats = frappe
+      .get_list("Print Format", { doc_type: doctype })
+      .sort(function (a, b) {
+        return a > b ? 1 : -1;
+      });
     $.each(print_formats, function (i, d) {
       if (
-        !in_list(print_format_list, d.name)
-        && d.print_format_type !== 'JS'
-        && (cint(enable_raw_printing) || !d.raw_printing)
+        !in_list(print_format_list, d.name) &&
+        d.print_format_type !== "JS" &&
+        (cint(enable_raw_printing) || !d.raw_printing)
       ) {
         print_format_list.push(d.name);
       }
     });
 
-    const cur_print_format = locals["Product Order"][Object.keys(locals['Product Order']).pop()].print_format;
+    const cur_print_format =
+      locals["Product Order"][Object.keys(locals["Product Order"]).pop()]
+        .print_format;
     if (cur_print_format) {
-      return [cur_print_format]
+      return [cur_print_format];
       // default_print_format = cur_print_format;
       // console.log(default_print_format)
       // var index = print_format_list.indexOf(default_print_format);
@@ -33,21 +40,26 @@ $.extend(frappe.meta, {
       // return print_format_list;
     }
     return print_format_list;
-  }
-})
-
+  },
+});
 
 frappe.ui.form.on("Product Order", {
   setup: function (frm) {
     var print_format_list = [];
-    let enable_raw_printing = frappe.model.get_doc(":Print Settings", "Print Settings").enable_raw_printing;
-    var print_formats = frappe.get_list("Print Format", { doc_type: frm.doc.doctype })
-      .sort(function (a, b) { return (a > b) ? 1 : -1; });
+    let enable_raw_printing = frappe.model.get_doc(
+      ":Print Settings",
+      "Print Settings"
+    ).enable_raw_printing;
+    var print_formats = frappe
+      .get_list("Print Format", { doc_type: frm.doc.doctype })
+      .sort(function (a, b) {
+        return a > b ? 1 : -1;
+      });
     $.each(print_formats, function (i, d) {
       if (
-        !in_list(print_format_list, d.name)
-        && d.print_format_type !== 'JS'
-        && (cint(enable_raw_printing) || !d.raw_printing)
+        !in_list(print_format_list, d.name) &&
+        d.print_format_type !== "JS" &&
+        (cint(enable_raw_printing) || !d.raw_printing)
       ) {
         print_format_list.push(d.name);
       }
@@ -191,31 +203,49 @@ frappe.ui.form.on("Product Order Details", {
     });
   },
   print_qr: function (frm) {
-    is_doc_instantiated(frm);
+    // is_doc_instantiated(frm);
     let row = frm.selected_doc.idx;
-    if (
-      frm.selected_doc.item_status !== "Inspected" &&
-      !frm.selected_doc.docstatus
-    ) {
-      frappe.model
-        .set_value(
-          "Product Order Details",
-          frm.selected_doc.name,
-          "item_status",
-          "Waiting Quality"
-        )
-        .then(() => {
-          if (frm.doc.__unsaved == 1) {
-            frm.save().then(() => {
-              print_product_details(frm, row);
+    frappe.call({
+      async: false,
+      method: "sap.api.generate_qr",
+      args: {
+        data: {
+          customer_no: frm.doc.customer_no,
+          customer_name: frm.doc.customer_name,
+          item_no: frm.doc.item_serial,
+          product_no: frm.doc.item_no,
+          net_weight: frm.selected_doc.net_weight,
+          gross_weight: frm.selected_doc.gross_weight,
+        },
+      },
+      callback: function (r) {
+        frm.selected_doc.qr_code = r.message;
+        refresh_field("product_details");
+        if (
+          frm.selected_doc.item_status !== "Inspected" &&
+          !frm.selected_doc.docstatus
+        ) {
+          frappe.model
+            .set_value(
+              "Product Order Details",
+              frm.selected_doc.name,
+              "item_status",
+              "Waiting Quality"
+            )
+            .then(() => {
+              if (frm.doc.__unsaved == 1) {
+                frm.save().then(() => {
+                  print_product_details(frm, row);
+                });
+              } else {
+                print_product_details(frm, row);
+              }
             });
-          } else {
-            print_product_details(frm, row);
-          }
-        });
-    } else {
-      print_product_details(frm, row);
-    }
+        } else {
+          print_product_details(frm, row);
+        }
+      },
+    });
 
     // frappe.call({
     //     method: 'sap.api.send_to_quality',
@@ -232,7 +262,6 @@ frappe.ui.form.on("Product Order Details", {
     function print_product_details(frm, row) {
       frm.doc.selected_qr = frm.doc.product_details[row - 1].qr_code;
       // frm.doc.product_details[row-1].item_status = "Waiting Quality"
-      refresh_field("product_details");
       frm.print_doc();
     }
   },

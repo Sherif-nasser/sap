@@ -39,7 +39,7 @@ frappe.ui.form.on("Quality Control", {
       method: "sap.api.get_items_wait_quality",
       callback: function (r) {
         let items = r.message;
-        console.log("items", items);
+        // console.log("items", items);
         update_items_table(frm, items);
       },
     });
@@ -252,7 +252,7 @@ function update_quality(name, status, qt_inspection = "") {
 function update_items_table(frm, items) {
   frm.doc.product_items = [];
   items.forEach((item) => {
-    console.log(item);
+    // console.log(item);
     frm.add_child("product_items", {
       pallet_no: item.pallet_no,
       gross_weight: item.total_weight,

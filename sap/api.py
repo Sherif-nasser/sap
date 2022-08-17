@@ -3,6 +3,7 @@ import requests
 import frappe
 import json
 import time
+from sap.qr_generator import get_qr
 
 
 @frappe.whitelist()
@@ -170,7 +171,7 @@ def send_product_to_sap(product_name, items=None, shift_employee=''):
                       for item in items]
 
     for item in items_list:
-        log.items += str(item.idx) + ", "
+        #log.items += str(item.idx) + ", "
         batch = {}
         batch["BatchNumber"] = str(product.document_no) + "/" + str(item.idx)
         batch["AddmisionDate"] = str(item.get("creation").date())
@@ -323,3 +324,8 @@ def send_loan(name):  # done
         return {"success": False, "message": f"SAP: {resp['error']['message']['value']}"}
     else:
         return {'success': True}
+
+
+@frappe.whitelist()
+def generate_qr(data):
+    return get_qr(data)
