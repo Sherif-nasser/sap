@@ -13,8 +13,8 @@
  "is_standard": 1,
  "label": "Sap Integration",
  "links": [],
- "modified": "2022-07-20 16:30:02.032886",
- "modified_by": "Administrator",
+ "modified": "2023-01-12 12:09:42.240334",
+ "modified_by": "it_ahmed@alqudsplastic.com",
  "module": "Sap",
  "name": "Sap Integration",
  "owner": "Administrator",
@@ -25,12 +25,7 @@
    "doc_view": "List",
    "label": "Product Order",
    "link_to": "Product Order",
-   "type": "DocType"
-  },
-  {
-   "doc_view": "List",
-   "label": "Production Setting",
-   "link_to": "Product Setting",
+   "stats_filter": "",
    "type": "DocType"
   },
   {
@@ -47,15 +42,21 @@
   },
   {
    "doc_view": "List",
-   "label": "Post Product",
-   "link_to": "Post Product Setting",
+   "label": "Log",
+   "link_to": "Sap Integration Log",
    "type": "DocType"
   },
   {
    "doc_view": "List",
-   "label": "Log",
-   "link_to": "Sap Integration Log",
+   "label": "QC Integration",
+   "link_to": "QC Integration",
    "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Quality Status",
+   "link_to": "Quality Status",
+   "type": "Report"
   }
  ]
 }

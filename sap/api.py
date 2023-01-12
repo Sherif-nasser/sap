@@ -7,7 +7,7 @@ from sap.qr_generator import get_qr
 
 
 @frappe.whitelist()
-def get_items_wait_quality(pallet_no='', start_date='', end_date='', item_serial='', document_no=''):
+def get_items_wait_quality(pallet_no='', start_date='', end_date='', item_serial='', item_no=''):
     """
     return a list of dicts of Product Order Details(child table) joined with Product
     Order(parent table) which there item_status = 'Waiting Quality' filtered on the
@@ -15,13 +15,13 @@ def get_items_wait_quality(pallet_no='', start_date='', end_date='', item_serial
     items without filter
 
     pallet_no = Product Order Details pallet_no
-    document_no = Product Order document_no
+    item_no = Product Order document_no
     start_date = the creation date of Product Order Details created on or after the start_date
     end_date = the creation date of Product Order Details created on or before the end_date
     """
 
     query = """
-        SELECT pd.name, p.name AS product_name, pd.pallet_no, pd.gross_weight, pd.net_weight, pd.quality_status, pd.item_status, p.document_no, p.item_group, p.customer_no, p.customer_name, p.quantity, p.length, p.width, p.item_serial, p.weight, p.thickness, p.core_type, p.core_weight, p.total_weight, p.application
+        SELECT pd.name, p.name AS product_name, pd.pallet_no, pd.gross_weight, pd.net_weight, pd.quality_status, pd.sap_serial_no, pd.sap_pallet_no , pd.item_status, p.document_no,p.item_no, p.item_group, p.customer_no, p.customer_name, p.quantity, p.length, p.width, p.item_serial, p.weight, p.thickness, p.core_type, p.core_weight, p.total_weight, p.application
         FROM `tabProduct Order` AS p JOIN `tabProduct Order Details` AS pd
         ON (p.name = pd.parent)
         WHERE (pd.item_status='Waiting Quality')
@@ -40,8 +40,8 @@ def get_items_wait_quality(pallet_no='', start_date='', end_date='', item_serial
         end_date += datetime.timedelta(days=1)
         query += f" AND pd.creation<='{end_date}'"
 
-    if document_no:
-        query += f" AND p.document_no='{document_no}'"
+    if item_no:
+        query += f" AND p.item_no='{item_no}'"
 
     items = frappe.db.sql(query, as_dict=1)
     return items
@@ -57,7 +57,6 @@ def update_item_quality(name, status, qt_inspection):
     qt_inspection = Product Order Details new quality inspection value
     """
     doc = frappe.get_doc("Product Order Details", name)
-    print(name)
     doc.quality_status = status
     doc.item_status = "Inspected"
     doc.qt_inspection = qt_inspection
@@ -173,7 +172,7 @@ def send_product_to_sap(product_name, items=None, shift_employee=''):
     for item in items_list:
         #log.items += str(item.idx) + ", "
         batch = {}
-        batch["BatchNumber"] = str(product.document_no) + "/" + str(item.idx)
+        batch["BatchNumber"] = str(product.item_no) + "/" + str(product.code)+"/" + str(item.idx)
         batch["AddmisionDate"] = str(item.get("creation").date())
 
         if product.get("weight_type") == "وزن صافى":
@@ -192,8 +191,8 @@ def send_product_to_sap(product_name, items=None, shift_employee=''):
                         "message": "make sure you set all items Gross Weight"}
 
         batch["InternalSerialNumber"] = product.get("sorder")
-        batch["ManufacturerSerialNumber"] = product.customer_name
-        batch["Location"] = str(product.document_no) + \
+        batch["U_B1Customer"] = product.customer_name
+        batch["Location"] = str(product.item_no) + \
             '/' + str(item.get("pallet_no", ''))
 
         for value in post_product_setting:
@@ -207,7 +206,8 @@ def send_product_to_sap(product_name, items=None, shift_employee=''):
               ] = item.get("gross_weight", '')
         batch[post_product_setting["jambo_roll_no"]
               ] = item.get("jambo_roll_no", '')
-
+        batch[post_product_setting["roll_status"]
+              ] = item.get("quality_status", '')
         batch_number.append(batch)
 
     data["DocumentLines"][0]["BatchNumbers"] = batch_number
@@ -216,13 +216,10 @@ def send_product_to_sap(product_name, items=None, shift_employee=''):
     headers = {
         'Cookie': f'B1SESSION={session_id}'
     }
-    print(data)
     payload = json.dumps(data)
-    print("\n", payload)
+    #frappe.throw(payload)
     response = requests.request("POST", url, headers=headers, data=payload)
     resp = json.loads(response.text)
-    # print(resp)
-    # print(resp['error'])
     if response.status_code == 201:
         log.status = "Success"
         log.insert()
@@ -266,7 +263,6 @@ def send_payroll(name):
             }
         }
     }
-    print(data)
     payload = json.dumps(data)
     headers = {
         'Content-Type': 'application/json',
@@ -310,7 +306,7 @@ def send_loan(name):  # done
             }
         }
     }
-    # print(data)
+
     payload = json.dumps(data)
     headers = {
         'Content-Type': 'application/json',
@@ -319,7 +315,6 @@ def send_loan(name):  # done
     response = requests.request("POST", url, headers=headers, data=payload)
 
     if response.status_code != 201 and response.status_code != 204:
-        # print("got here")
         resp = json.loads(response.text)
         return {"success": False, "message": f"SAP: {resp['error']['message']['value']}"}
     else:
@@ -329,3 +324,100 @@ def send_loan(name):  # done
 @frappe.whitelist()
 def generate_qr(data):
     return get_qr(data)
+
+
+@frappe.whitelist()
+def get_qc_from_sap():
+    post_product_setting = frappe.get_doc("Post Product Setting").as_dict()
+    login_url = post_product_setting["login_url"]
+    password = post_product_setting["password"]
+    username = post_product_setting["user_name"]
+    company_db = post_product_setting["company_db"]
+
+    session_id = session_login(login_url, company_db, username, password)
+
+    max_doc = frappe.db.sql(
+        "select MAX(doc_entry) as m from `tabQC Integration`;", as_dict=1)[0]['m'] or 0
+
+    available_items_url = f"https://htpc20847p01.cloudiax.com:50000/b1s/v1/PurchaseDeliveryNotes?$select = DocEntry& $filter= DocEntry gt {max_doc}"
+
+    payload = {}
+    headers = {
+        'Cookie': f'B1SESSION={session_id}'
+    }
+
+    response = requests.request(
+        "GET", available_items_url, headers=headers, data=payload)
+
+    values = json.loads(response.text)['value']
+    for value in values:
+        doc_e = value['DocEntry']
+        item_url = f"https://htpc20847p01.cloudiax.com:50000/b1s/v1/PurchaseDeliveryNotes({doc_e})"
+        headers = {
+            'Cookie': f'B1SESSION={session_id}'
+        }
+        response = requests.request(
+            "GET", item_url, headers=headers, data={})
+        item = json.loads(response.text)
+        for i in item['DocumentLines']:
+            doc = frappe.new_doc("QC Integration")
+            doc.doc_num = item.get('DocNum')
+            doc.doc_entry = item.get('DocEntry')
+            doc.doc_date = item.get('DocDate')
+            doc.item_code = i.get('ItemCode')
+            doc.item_description = i.get('ItemDescription')
+            doc.quantity = i.get('Quantity')
+            doc.batch_numbers = []
+            for batch_num in i.get('BatchNumbers'):
+                child = frappe.new_doc("QC Integration Details")
+                child.batchnumber = batch_num.get("BatchNumber")
+                child.expirydate = batch_num.get("ExpiryDate")
+                child.quantity = batch_num.get("Quantity")
+                child.u_b1abs = batch_num.get("U_B1ABS")
+                child.parent = doc.name
+                child.parenttype = 'QC Integration'
+                doc.append('batch_numbers', child)
+            doc.insert()
+    frappe.db.commit()
+    return {'success': True}
+
+
+@frappe.whitelist()
+def send_qc_to_sap(items):
+    post_product_setting = frappe.get_doc("Post Product Setting").as_dict()
+    login_url = post_product_setting["login_url"]
+    password = post_product_setting["password"]
+    username = post_product_setting["user_name"]
+    company_db = post_product_setting["company_db"]
+
+    session_id = session_login(login_url, company_db, username, password)
+    headers = {
+        'Cookie': f'B1SESSION={session_id}'
+    }
+    items = json.loads(items)
+    for item in items:
+        rec = frappe.get_doc("QC Integration Details", item)
+        data = {
+            "Status": "bdsStatus_Released",
+            "U_B1B023": rec.status
+        }
+        url = f"https://htpc20847p01.cloudiax.com:50000/b1s/v1/BatchNumberDetails({rec.u_b1abs})"
+        payload = json.dumps(data)
+
+        response = requests.request(
+            "PATCH", url, headers=headers, data=payload)
+        if response.status_code == 204:
+            return {'success': True}
+        else:
+            resp = json.loads(response.text)
+            return {"success": False, "message": f"SAP: {resp['error']['message']['value']}"}
+@frappe.whitelist()
+def update_item_waiting_quality(name):
+   # print ("\n i'm in \n ")
+    doc = frappe.get_doc("Product Order Details",name)    
+
+    doc.item_status = "Waiting Quality"
+
+    doc.save()
+    frappe.db.commit()
+    return True

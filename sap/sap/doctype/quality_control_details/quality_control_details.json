@@ -29,7 +29,10 @@
   "product_total_weight",
   "application",
   "item_name",
-  "product_name"
+  "product_name",
+  "sap_serial_no",
+  "sap_pallet_no",
+  "production_no"
  ],
  "fields": [
   {
@@ -46,7 +49,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Quality Status",
-   "options": "\nAccepted\nRejected"
+   "options": "\n\u0645\u0637\u0627\u0628\u0642\n\u063a\u064a\u0631 \u0645\u0637\u0627\u0628\u0642\n\u062f\u0631\u062c\u0629 \u062b\u0627\u0646\u064a\u0629\n\u0647\u0627\u0644\u0643\n\u0639\u0638\u0645\nNone"
   },
   {
    "columns": 1,
@@ -192,13 +195,32 @@
   {
    "fieldname": "product_name",
    "fieldtype": "Data",
-   "label": "product name"
+   "label": "product name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sap_serial_no",
+   "fieldtype": "Data",
+   "label": "sap_serial_no",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sap_pallet_no",
+   "fieldtype": "Data",
+   "label": "sap_pallet_no",
+   "read_only": 1
+  },
+  {
+   "fieldname": "production_no",
+   "fieldtype": "Data",
+   "label": "Production No",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-07-27 11:00:49.623580",
+ "modified": "2022-10-27 11:38:25.168964",
  "modified_by": "Administrator",
  "module": "Sap",
  "name": "Quality Control Details",

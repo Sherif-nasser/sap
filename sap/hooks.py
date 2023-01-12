@@ -117,12 +117,13 @@ app_license = "MIT"
 
 
 scheduler_events = {
-    "cron":{
-        "*/10 * * * *":[
-            "sap.api.get_products_from_sap"
+    "cron": {
+        "*/10 * * * *": [
+            "sap.api.get_products_from_sap",
+            "sap.api.get_qc_from_sap"
         ]
     }
- }
+}
 
 # scheduler_events = {
 # 	"all": [
@@ -196,4 +197,3 @@ scheduler_events = {
 # auth_hooks = [
 # 	"sap.auth.validate"
 # ]
-

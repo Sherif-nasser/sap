@@ -12,6 +12,7 @@
   "shift",
   "shift_employee",
   "order_status",
+  "close_po",
   "column_break_3",
   "item_group",
   "item_serial",
@@ -62,7 +63,9 @@
   "print_selected_pallet",
   "column_break_30",
   "send_to_sap",
+  "update_item_waiting_quality",
   "selected_qr",
+  "selected_row",
   "section_break_31",
   "selected_product",
   "amended_from"
@@ -136,15 +139,14 @@
   },
   {
    "fieldname": "core_type",
-   "fieldtype": "Data",
+   "fieldtype": "Select",
    "label": "Core Type",
-   "read_only": 1
+   "options": "\nCARTON 3\" H\nCARTON 3\" L\nCARTON 39 MM\nCARTON 6\"\nPLASTIC 3\"\nCARTON 6\" CPP"
   },
   {
    "fieldname": "core_weight",
    "fieldtype": "Data",
-   "label": "Core Weight",
-   "read_only": 1
+   "label": "Core Weight"
   },
   {
    "fieldname": "total_weight",
@@ -306,8 +308,7 @@
   {
    "fieldname": "core_width",
    "fieldtype": "Data",
-   "label": "Core Width",
-   "read_only": 1
+   "label": "Core Width"
   },
   {
    "fieldname": "packing_weight",
@@ -355,8 +356,9 @@
   },
   {
    "fieldname": "item_type",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "label": "Item Type",
+   "options": "Production Type",
    "read_only": 1
   },
   {
@@ -419,12 +421,28 @@
    "label": "Order Status",
    "options": "New\nIn Progress\nFinished",
    "read_only": 1
+  },
+  {
+   "fieldname": "selected_row",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "selected_row"
+  },
+  {
+   "fieldname": "close_po",
+   "fieldtype": "Button",
+   "label": "Close PO"
+  },
+  {
+   "fieldname": "update_item_waiting_quality",
+   "fieldtype": "Button",
+   "label": "Update item waiting quality"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-08-17 14:52:22.751434",
+ "modified": "2022-10-07 06:58:08.354652",
  "modified_by": "Administrator",
  "module": "Sap",
  "name": "Product Order",

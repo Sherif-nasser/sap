@@ -72,7 +72,7 @@ frappe.ui.form.on("Product Order", {
     if (!cur_frm.doc.docstatus)
       frm.set_value("shift_employee", frappe.user.name);
     frm.doc.product_details.forEach((product) => {
-      if (product.item_status == "Sent to SAP") product.docstatus = 1;
+       if (product.item_status == "Sent to SAP") product.docstatus = 1;
     });
     refresh_field("product_details");
   },
@@ -87,10 +87,42 @@ frappe.ui.form.on("Product Order", {
       frm.add_child("product_details", {
         // row_no: `${frm.doc.document_no}-${i+1}`,
         ref: `${frm.doc.item_serial}-${frm.doc.length}-${frm.doc.width}`,
+        length:`${frm.doc.length}`,
       });
     }
     frm.set_value("order_status", "In Progress");
     refresh_field("product_details");
+  },
+  update_item_waiting_quality: function (frm) {
+    let items = frm.get_selected().product_details;
+
+    if (!items) frappe.throw("Select items to be sent");
+
+    items.forEach((item) => {
+
+      if (locals["Product Order Details"][item].item_status == "Waiting Quality")
+        frappe.throw("Some items already is Waiting Quality");
+      else {
+        frappe.call({
+          method: "sap.api.update_item_waiting_quality",
+          args: {
+            name: locals["Product Order Details"][item].name,
+
+          },
+          callback:function(r){
+            frappe.msgprint("Succesfuly Qc")
+            frm.reload_doc();
+
+          }
+        });
+      }
+   
+      frm.save().then(() => frm.trigger("reload"));
+
+      //refresh_field("product_details");
+
+    });
+
   },
   send_to_sap: function (frm) {
     is_doc_instantiated(frm);
@@ -151,7 +183,7 @@ frappe.ui.form.on("Product Order", {
       ],
       primary_action_label: "Print",
       primary_action(values) {
-        frm.doc.selected_pallet_no = values.pallet_no;
+        frm.doc.selected_pallet_no = values.sap_pallet_no;
         print_selected_doc(frm);
 
         d.hide();
@@ -163,7 +195,7 @@ frappe.ui.form.on("Product Order", {
       frm.doc.selected_product = [];
       let i = 1;
       frm.doc.product_details.forEach((product) => {
-        if (product.pallet_no == frm.doc.selected_pallet_no) {
+        if (product.sap_pallet_no == frm.doc.selected_pallet_no) {
           frm.doc.selected_product.push({ ...product, idx: i });
           i += 1;
         }
@@ -261,11 +293,29 @@ frappe.ui.form.on("Product Order Details", {
     // })
 
     function print_product_details(frm, row) {
-      frm.doc.selected_qr = frm.doc.product_details[row - 1].qr_code;
+      // frm.doc.selected_qr = frm.doc.product_details[row - 1].qr_code;
+      // frm.doc.selected_row = row - 1;
+      frappe.model.set_value(
+        "Product Order",
+        frm.doc.name,
+        "selected_row",
+        row - 1
+      );
+      frappe.model.set_value(
+        "Product Order",
+        frm.doc.name,
+        "selected_qr",
+        frm.doc.product_details[row - 1].qr_code
+      );
+      // refresh_field("selected_qr");
+      // refresh_field("selected_row");
+      frm.save();
       // frm.doc.product_details[row-1].item_status = "Waiting Quality"
       frm.print_doc();
-    }
-  },
+    }  },
+
+    // "selected_qr",
+    // 
 
   qt_inspection: function (frm) {
     frappe.call({

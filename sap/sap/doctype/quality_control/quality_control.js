@@ -1,5 +1,6 @@
 // Copyright (c) 2022, ahmed and contributors
 // For license information, please see license.txt
+
 frappe.provide("erpnext.public");
 frappe.provide("erpnext.controllers");
 
@@ -46,6 +47,7 @@ frappe.ui.form.on("Quality Control", {
     frm.disable_save();
   },
   change_rolls_status: function (frm) {
+   
     let d = new frappe.ui.Dialog({
       title: "Rolls Status",
       fields: [
@@ -85,7 +87,7 @@ frappe.ui.form.on("Quality Control", {
           label: "Status",
           fieldname: "row_status",
           fieldtype: "Select",
-          options: ["", "Accepted", "Rejected"],
+          options: ["","identical","Not matching","second degree","mortal","bone","None"],
           reqd: 1,
         },
         {
@@ -175,7 +177,7 @@ frappe.ui.form.on("Quality Control", {
         { fieldtype: "Column Break" },
         { label: "End Date", fieldname: "end_date", fieldtype: "Date" },
         { fieldtype: "Section Break" },
-        { label: "Document No", fieldname: "document_no", fieldtype: "Data" },
+        { label: "Production No", fieldname: "item_no", fieldtype: "Data" },
         { label: "Pallet Number", fieldname: "pallet_no", fieldtype: "Data" },
         { label: "Item Serial", fieldname: "item_serial", fieldtype: "Data" },
       ],
@@ -190,7 +192,7 @@ frappe.ui.form.on("Quality Control", {
             start_date: values.start_date || "",
             end_date: values.end_date || "",
             item_serial: values.item_serial || "",
-            document_no: values.document_no || "",
+            item_no : values.item_no || "",
           },
           callback: function (r) {
             let items = r.message;
@@ -217,7 +219,7 @@ frappe.ui.form.on("Quality Control Details", {
     frm.reload_doc();
   },
   qt_inspection: function (frm) {
-    if (frm.selected_doc.qt_inspection)
+    if (frm.selected_doc.qt_inspection) {
       frappe.call({
         method: "frappe.client.get",
         args: {
@@ -234,7 +236,8 @@ frappe.ui.form.on("Quality Control Details", {
           refresh_field("product_items");
         },
       });
-    frm.reload_doc();
+      frm.reload_doc();
+    }
   },
 });
 
@@ -274,6 +277,9 @@ function update_items_table(frm, items) {
       application: item.application,
       item_name: item.name,
       product_name: item.product_name,
+      sap_serial_no:item.sap_serial_no,
+      sap_pallet_no:item.sap_pallet_no,
+      production_no:item.item_no
     });
   });
   refresh_field("product_items");
